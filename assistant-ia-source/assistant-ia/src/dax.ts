@@ -4,7 +4,7 @@
 // une requête pour la vue Requête DAX de Power BI Desktop, et une mesure à ajouter au modèle.
 // Aucun import Power BI ni DOM : le module se teste dans Node.
 
-import { enDate, trouverColonne } from "./engine";
+import { enDate, estVrai, trouverColonne } from "./engine";
 import { iso } from "./schema";
 import { Col, Dataset, Filtre, Periode, Plan, Resultat } from "./types";
 
@@ -82,7 +82,7 @@ function predicat(ds: Dataset, f: Filtre): { col: Col; exp: string } {
         return { col, exp: compare(r, lits) };
     }
     if (col.kind === "booleen") {
-        const lits = brutes.map(v => ["true", "vrai", "oui", "1", "yes"].includes(String(v).trim().toLowerCase()) ? "TRUE()" : "FALSE()");
+        const lits = brutes.map(v => estVrai(v) ? "TRUE()" : "FALSE()");
         return { col, exp: compare(r, lits) };
     }
     if (op === "contient") return { col, exp: `CONTAINSSTRING(${r}, ${texte(brutes[0])})` };

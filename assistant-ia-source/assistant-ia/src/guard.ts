@@ -43,7 +43,7 @@ function base(r: Resultat): number[] {
     return [...new Set(vals)].slice(0, 120);
 }
 
-export function candidats(r: Resultat): number[] {
+function candidats(r: Resultat): number[] {
     const b = base(r);
     const out = new Set<number>();
     let somme = 0;

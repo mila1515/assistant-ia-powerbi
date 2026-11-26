@@ -14,13 +14,16 @@ import IVisualHost = powerbi.extensibility.visual.IVisualHost;
 import IVisualEventService = powerbi.extensibility.IVisualEventService;
 import DataView = powerbi.DataView;
 
-import { demander } from "./ia";
-import { proposer, repondre, suggestions, synthese, Synthese, Tour } from "./pipeline";
 import { DaxIndisponible, versDax } from "./dax";
+import { lireTableau } from "./donnees";
+import { demander } from "./ia";
+import { Appel, proposer, repondre, suggestions, synthese, Synthese, Tour } from "./pipeline";
 import { rapportTexte } from "./rapport";
 import { MODELE_PAR_DEFAUT, VisualFormattingSettingsModel } from "./settings";
-import { Cell, Col, Dataset, Kind } from "./types";
-import { carte, h } from "./ui";
+import { Col, Dataset } from "./types";
+import { boutonsQuestions, carte, copier, h, vider, zoneTexte } from "./ui";
+
+const message = (e: unknown) => e instanceof Error ? e.message : String(e);
 
 export class Visual implements IVisual {
     private host: IVisualHost;
@@ -33,13 +36,13 @@ export class Visual implements IVisual {
     private occupe = false;
     private contenu = false;      // le fil contient déjà des propositions ou des réponses : on ne le réécrit plus
     private ideesPour = "";       // colonnes pour lesquelles on a déjà proposé des analyses automatiquement
-    private boutonIdees: HTMLButtonElement;
-    private boutonRapport: HTMLButtonElement;
-    private puceFiltre: HTMLButtonElement;
     private filtreActif = "";     // libellé du filtre que l'assistant a posé sur le rapport
 
     private root: HTMLElement;
     private statut: HTMLElement;
+    private boutonIdees: HTMLButtonElement;
+    private boutonRapport: HTMLButtonElement;
+    private puceFiltre: HTMLButtonElement;
     private fil: HTMLElement;
     private input: HTMLInputElement;
     private bouton: HTMLButtonElement;
@@ -107,6 +110,56 @@ export class Visual implements IVisual {
         }
     }
 
+    public getFormattingModel(): powerbi.visuals.FormattingModel {
+        return this.fs.buildFormattingModel(this.settings);
+    }
+
+    // ---------- état et outils communs ----------
+
+    private cle(): string {
+        return String(this.settings?.iaCard.apiKey.value || "").trim();
+    }
+
+    private exemples(): boolean {
+        return !!this.settings.iaCard.exemples.value;
+    }
+
+    // la fonction qui parle à l'IA, avec la clé et le modèle du volet Format
+    private appel(): Appel {
+        const modele = String(this.settings.iaCard.modele.value || "").trim() || MODELE_PAR_DEFAUT;
+        const cle = this.cle();
+        return (sys, msgs) => demander(cle, modele, sys, msgs);
+    }
+
+    private defiler() {
+        this.fil.scrollTop = this.fil.scrollHeight;
+    }
+
+    // début d'une action : le fil d'accueil laisse la place, les boutons sont bloqués
+    private commencer() {
+        if (!this.contenu) vider(this.fil);
+        this.contenu = true;
+        this.occupe = true;
+        this.afficherEtat();
+    }
+
+    private terminer() {
+        this.occupe = false;
+        this.afficherEtat();
+        this.defiler();
+    }
+
+    // une carte vide avec un message d'attente, remplie ensuite
+    private carteAttente(attente: string): HTMLElement {
+        const t = h("div", "ia-tour");
+        const box = h("div", "ia-rep");
+        t.appendChild(box);
+        box.appendChild(h("div", "ia-charge", attente));
+        this.fil.appendChild(t);
+        this.defiler();
+        return box;
+    }
+
     private afficherEtat() {
         const ds = this.ds;
         const pret = !!ds && ds.cols.length > 0;
@@ -119,7 +172,7 @@ export class Visual implements IVisual {
         this.puceFiltre.style.display = this.filtreActif ? "" : "none";
         if (this.contenu || this.occupe) return;
 
-        clear(this.fil);
+        vider(this.fil);
         const vide = h("div", "ia-vide");
         if (!pret) {
             vide.appendChild(h("div", "ia-titre", "Glisse tes colonnes dans le visuel"));
@@ -130,13 +183,7 @@ export class Visual implements IVisual {
         } else {
             vide.appendChild(h("div", "ia-titre", "Que veux-tu savoir ?"));
             vide.appendChild(h("p", "ia-texte", `${ds!.cols.map(c => c.name).join(", ")}.`));
-            const s = h("div", "ia-sugg");
-            for (const q of suggestions(ds!)) {
-                const b = h("button", "ia-chip", q, { type: "button" });
-                b.onclick = () => this.poser(q);
-                s.appendChild(b);
-            }
-            vide.appendChild(s);
+            vide.appendChild(boutonsQuestions(suggestions(ds!), q => this.poser(q)));
         }
         this.fil.appendChild(vide);
 
@@ -147,26 +194,16 @@ export class Visual implements IVisual {
         }
     }
 
+    // ---------- propositions d'analyses ----------
+
     private async proposerAnalyses() {
         const ds = this.ds;
         if (!ds || !ds.cols.length || this.occupe || !this.cle()) return;
-        if (!this.contenu) clear(this.fil);
-        this.contenu = true;
-        this.occupe = true;
-        this.afficherEtat();
-
-        const t = h("div", "ia-tour");
-        const box = h("div", "ia-rep");
-        t.appendChild(box);
-        box.appendChild(h("div", "ia-charge", `Je regarde tes ${ds.cols.length} colonnes et ${ds.rows.length.toLocaleString("fr-FR")} lignes…`));
-        this.fil.appendChild(t);
-        this.fil.scrollTop = this.fil.scrollHeight;
-
-        const modele = String(this.settings.iaCard.modele.value || "").trim() || MODELE_PAR_DEFAUT;
-        const cle = this.cle();
+        this.commencer();
+        const box = this.carteAttente(`Je regarde tes ${ds.cols.length} colonnes et ${ds.rows.length.toLocaleString("fr-FR")} lignes…`);
         try {
-            const p = await proposer(ds, !!this.settings.iaCard.exemples.value, (sys, msgs) => demander(cle, modele, sys, msgs));
-            clear(box);
+            const p = await proposer(ds, this.exemples(), this.appel());
+            vider(box);
             box.appendChild(h("div", "ia-titre", "Voici ce que je te propose"));
             if (p.apercu) box.appendChild(h("p", "ia-texte", p.apercu));
             const liste = h("div", "ia-idees");
@@ -181,63 +218,46 @@ export class Visual implements IVisual {
             box.appendChild(h("p", "ia-meta", "Clique sur une analyse, ou pose ta propre question en bas."));
         } catch (e) {
             // IA indisponible : on garde au moins les suggestions calculées sur place
-            clear(box);
+            vider(box);
             box.className = "ia-rep ia-erreur";
             box.appendChild(h("div", "ia-titre", "Je n'ai pas pu proposer d'analyses"));
-            box.appendChild(h("p", "ia-texte", e instanceof Error ? e.message : String(e)));
-            const s = h("div", "ia-sugg");
-            for (const q of suggestions(ds)) {
-                const b = h("button", "ia-chip", q, { type: "button" });
-                b.onclick = () => this.poser(q);
-                s.appendChild(b);
-            }
-            box.appendChild(s);
+            box.appendChild(h("p", "ia-texte", message(e)));
+            box.appendChild(boutonsQuestions(suggestions(ds), q => this.poser(q)));
         }
-        this.occupe = false;
-        this.afficherEtat();
-        this.fil.scrollTop = this.fil.scrollHeight;
+        this.terminer();
     }
 
-    private cle(): string {
-        return String(this.settings?.iaCard.apiKey.value || "").trim();
-    }
+    // ---------- question / réponse ----------
 
     private async poser(q: string) {
         q = q.trim();
         if (!q || this.occupe || !this.ds) return;
-        if (!this.contenu) clear(this.fil);
-        this.contenu = true;
-        this.occupe = true;
         this.input.value = "";
-        this.afficherEtat();
+        this.commencer();
 
         const enCours = h("div", "ia-tour");
         enCours.appendChild(h("div", "ia-q", q));
         const etape = h("div", "ia-charge", "…");
         enCours.appendChild(etape);
         this.fil.appendChild(enCours);
-        this.fil.scrollTop = this.fil.scrollHeight;
+        this.defiler();
 
-        const modele = String(this.settings.iaCard.modele.value || "").trim() || MODELE_PAR_DEFAUT;
-        const cle = this.cle();
         let tour: Tour;
         try {
-            tour = await repondre(q, this.ds, !!this.settings.iaCard.exemples.value, this.tours,
-                (sys, msgs) => demander(cle, modele, sys, msgs), t => { etape.textContent = t; });
+            tour = await repondre(q, this.ds, this.exemples(), this.tours, this.appel(), t => { etape.textContent = t; });
         } catch (e) {
-            tour = { question: q, type: "erreur", titre: "Je n'ai pas pu répondre", texte: e instanceof Error ? e.message : String(e),
+            tour = { question: q, type: "erreur", titre: "Je n'ai pas pu répondre", texte: message(e),
                      chiffres: [], suggestions: [], verifies: 0, nonVerifies: [], appels: 0, tokens: 0, ms: 0 };
         }
         this.tours.push(tour);
         const c = carte(tour, x => this.poser(x));
+        const rep = c.querySelector(".ia-rep");
         const barre = this.barreFiltre(tour);
-        if (barre) c.querySelector(".ia-rep")?.appendChild(barre);
+        if (barre) rep?.appendChild(barre);
         const dax = this.blocDax(tour);
-        if (dax) c.querySelector(".ia-rep")?.appendChild(dax);
+        if (dax) rep?.appendChild(dax);
         enCours.replaceWith(c);
-        this.occupe = false;
-        this.afficherEtat();
-        this.fil.scrollTop = this.fil.scrollHeight;
+        this.terminer();
         this.input.focus();
     }
 
@@ -267,48 +287,6 @@ export class Visual implements IVisual {
         return barre;
     }
 
-    // ---------- le même calcul en DAX ----------
-
-    private blocDax(t: Tour): HTMLElement | null {
-        if (t.type !== "reponse" || !t.plan || !t.resultat || !this.ds) return null;
-        const d = h("details", "ia-details ia-dax");
-        d.appendChild(h("summary", undefined, "Voir le DAX"));
-        try {
-            const code = versDax(this.ds, t.plan, t.resultat);
-            d.appendChild(h("p", "ia-meta", "Clique dans une zone : tout le code est sélectionné. Copie-le en entier (Ctrl+C), sans en oublier le début."));
-            d.appendChild(this.blocCode("Requête : vue Requête DAX > coller > Exécuter", code.requete));
-            code.mesures.forEach((m, i) => d.appendChild(this.blocCode(
-                `Mesure${code.mesures.length > 1 ? ` ${i + 1}` : ""} « ${m.nom} » : Modélisation > Nouvelle mesure > remplacer tout le texte`, m.code)));
-            for (const n of code.notes) d.appendChild(h("p", "ia-meta", n));
-        } catch (e) {
-            d.appendChild(h("p", "ia-meta", e instanceof DaxIndisponible ? e.message : `DAX indisponible : ${e instanceof Error ? e.message : String(e)}`));
-        }
-        return d;
-    }
-
-    private blocCode(titre: string, code: string): HTMLElement {
-        const bloc = h("div", "ia-code");
-        const tete = h("div", "ia-code-tete");
-        tete.appendChild(h("span", "ia-meta", titre));
-        const b = h("button", "ia-chip", "Copier", { type: "button" });
-        const zone = h("textarea", "ia-rapport-texte", undefined, { readonly: "true", rows: String(Math.min(14, code.split("\n").length + 1)), spellcheck: "false" });
-        zone.value = code;
-        // un clic dans la zone sélectionne tout : une copie à la main ne peut plus oublier le début
-        zone.onclick = () => zone.select();
-        zone.onfocus = () => zone.select();
-        b.onclick = () => {
-            zone.focus();
-            zone.select();
-            let ok = false;
-            try { ok = document.execCommand("copy"); } catch { ok = false; }
-            b.textContent = ok ? "Copié ✓" : "Sélectionné : Ctrl+C";
-        };
-        tete.appendChild(b);
-        bloc.appendChild(tete);
-        bloc.appendChild(zone);
-        return bloc;
-    }
-
     private filtrer(col: Col, valeurs: (string | number)[], libelle: string) {
         if (!col.cible) return;
         // les valeurs doivent avoir le type de la colonne du modèle
@@ -328,11 +306,11 @@ export class Visual implements IVisual {
             this.filtreActif = `${col.name} = ${libelle}`;
             this.afficherEtat();
         } catch (e) {
-            // une erreur ici était silencieuse : on l'affiche pour savoir pourquoi le filtre ne part pas
+            // sans ce message, un refus de Power BI passerait inaperçu
             this.filtreActif = "";
             this.afficherEtat();
             this.puceFiltre.style.display = "";
-            this.puceFiltre.textContent = `Filtre refusé par Power BI (${col.cible.table}[${col.cible.colonne}]) : ${e instanceof Error ? e.message : String(e)}`;
+            this.puceFiltre.textContent = `Filtre refusé par Power BI (${col.cible.table}[${col.cible.colonne}]) : ${message(e)}`;
         }
     }
 
@@ -342,33 +320,55 @@ export class Visual implements IVisual {
         this.afficherEtat();
     }
 
+    // ---------- le même calcul en DAX ----------
+
+    private blocDax(t: Tour): HTMLElement | null {
+        if (t.type !== "reponse" || !t.plan || !t.resultat || !this.ds) return null;
+        const d = h("details", "ia-details ia-dax");
+        d.appendChild(h("summary", undefined, "Voir le DAX"));
+        try {
+            const code = versDax(this.ds, t.plan, t.resultat);
+            d.appendChild(h("p", "ia-meta", "Clique dans une zone : tout le code est sélectionné. Copie-le en entier (Ctrl+C), sans en oublier le début."));
+            d.appendChild(this.blocCode("Requête : vue Requête DAX > coller > Exécuter", code.requete));
+            code.mesures.forEach((m, i) => d.appendChild(this.blocCode(
+                `Mesure${code.mesures.length > 1 ? ` ${i + 1}` : ""} « ${m.nom} » : Modélisation > Nouvelle mesure > remplacer tout le texte`, m.code)));
+            for (const n of code.notes) d.appendChild(h("p", "ia-meta", n));
+        } catch (e) {
+            d.appendChild(h("p", "ia-meta", e instanceof DaxIndisponible ? e.message : `DAX indisponible : ${message(e)}`));
+        }
+        return d;
+    }
+
+    private blocCode(titre: string, code: string): HTMLElement {
+        const bloc = h("div", "ia-code");
+        const tete = h("div", "ia-code-tete");
+        tete.appendChild(h("span", "ia-meta", titre));
+        const zone = zoneTexte(code, Math.min(14, code.split("\n").length + 1), titre);
+        const b = h("button", "ia-chip", "Copier", { type: "button" });
+        b.onclick = () => { b.textContent = copier(zone) ? "Copié ✓" : "Sélectionné : Ctrl+C"; };
+        tete.appendChild(b);
+        bloc.appendChild(tete);
+        bloc.appendChild(zone);
+        return bloc;
+    }
+
     // ---------- rapport : synthèse + texte complet à copier (Power BI bloque les téléchargements depuis les visuels) ----------
 
     private async genererRapport() {
         const ds = this.ds;
         const faites = this.tours.filter(t => t.type === "reponse");
         if (!ds || this.occupe || !faites.length) return;
-        this.contenu = true;
-        this.occupe = true;
-        this.afficherEtat();
+        this.commencer();
+        const box = this.carteAttente(`Je rédige le rapport à partir de tes ${faites.length} analyse${faites.length > 1 ? "s" : ""}…`);
 
-        const t = h("div", "ia-tour");
-        const box = h("div", "ia-rep");
-        t.appendChild(box);
-        box.appendChild(h("div", "ia-charge", `Je rédige le rapport à partir de tes ${faites.length} analyse${faites.length > 1 ? "s" : ""}…`));
-        this.fil.appendChild(t);
-        this.fil.scrollTop = this.fil.scrollHeight;
-
-        const modele = String(this.settings.iaCard.modele.value || "").trim() || MODELE_PAR_DEFAUT;
-        const cle = this.cle();
         let syn: Synthese | null = null, erreurSyn = "";
         try {
-            syn = await synthese(this.tours, (sys, msgs) => demander(cle, modele, sys, msgs));
+            syn = await synthese(this.tours, this.appel());
         } catch (e) {
-            erreurSyn = e instanceof Error ? e.message : String(e);
+            erreurSyn = message(e);
         }
 
-        clear(box);
+        vider(box);
         box.appendChild(h("div", "ia-titre", "Rapport d'analyse"));
         if (syn) {
             box.appendChild(h("p", "ia-texte", syn.synthese));
@@ -382,83 +382,19 @@ export class Visual implements IVisual {
 
         // le rapport complet en texte : à copier dans Word, puis Fichier > Enregistrer sous > PDF
         const texte = rapportTexte({ date: new Date(), lignes: ds.rows.length, colonnes: ds.cols.map(c => c.name), filtreRapport: this.filtreActif || undefined }, this.tours, syn);
-        const zone = h("textarea", "ia-rapport-texte", undefined, { readonly: "true", rows: "10", "aria-label": "Rapport en texte" });
-        zone.value = texte;
-        zone.onclick = () => zone.select();
-        zone.onfocus = () => zone.select();
-        const copier = h("button", "ia-envoyer", "Copier le rapport", { type: "button" });
+        const zone = zoneTexte(texte, 10, "Rapport en texte");
+        const bouton = h("button", "ia-envoyer", "Copier le rapport", { type: "button" });
         const info = h("span", "ia-meta", "Colle-le dans Word (Ctrl+V), puis Fichier > Enregistrer sous > PDF.");
-        copier.onclick = () => {
-            zone.focus();
-            zone.select();
-            let ok = false;
-            try { ok = document.execCommand("copy"); } catch { ok = false; }
-            info.textContent = ok
+        bouton.onclick = () => {
+            info.textContent = copier(zone)
                 ? "Copié ✓ Colle-le dans Word (Ctrl+V), puis Fichier > Enregistrer sous > PDF."
                 : "Le texte est sélectionné : fais Ctrl+C, puis colle-le dans Word (Ctrl+V).";
         };
         const barre = h("div", "ia-filtres");
-        barre.appendChild(copier);
+        barre.appendChild(bouton);
         barre.appendChild(info);
         box.appendChild(barre);
         box.appendChild(zone);
-
-        this.occupe = false;
-        this.afficherEtat();
-        this.fil.scrollTop = this.fil.scrollHeight;
+        this.terminer();
     }
-
-    public getFormattingModel(): powerbi.visuals.FormattingModel {
-        return this.fs.buildFormattingModel(this.settings);
-    }
-}
-
-function cibleDe(q: string, role: "colonne" | "valeur"): { table: string; colonne: string } | undefined {
-    const agg = q.match(/^[A-Za-z]+\((.+)\)$/);
-    if (role === "valeur" && !agg) return undefined;       // une mesure du modèle : sa formule n'est pas connue
-    const interne = agg ? agg[1] : q;
-    if (role === "colonne" && agg) return undefined;
-    const p = interne.indexOf(".");
-    if (p <= 0 || interne.slice(p + 1).includes(".") || interne.includes("(")) return undefined;
-    return { table: interne.slice(0, p), colonne: interne.slice(p + 1) };
-}
-
-function clear(e: HTMLElement) {
-    while (e.firstChild) e.removeChild(e.firstChild);
-}
-
-function genre(t: powerbi.ValueTypeDescriptor | undefined): Kind {
-    if (!t) return "texte";
-    if (t.dateTime) return "date";
-    if (t.numeric || t.integer) return "nombre";
-    if (t.bool) return "booleen";
-    return "texte";
-}
-
-function lireTableau(dv: DataView | undefined): Dataset | null {
-    const t = dv?.table;
-    if (!t || !t.columns?.length) return null;
-    const vus = new Map<string, number>();
-    const cols = t.columns.map(c => {
-        let name = c.displayName || c.queryName || "Colonne";
-        const k = vus.get(name) || 0;
-        vus.set(name, k + 1);
-        if (k) name = `${name} (${k + 1})`;
-        const role = (c.roles?.valeurs ? "valeur" : "colonne") as "valeur" | "colonne";
-        // queryName : « Table.Colonne » (colonne simple) ou « Sum(Table.Colonne) » (valeur agrégée) ; rien pour une mesure ou une hiérarchie
-        const cible = cibleDe(c.queryName || "", role);
-        return { name, kind: genre(c.type), role, ...(cible ? { cible } : {}) };
-    });
-    const rows: Cell[][] = (t.rows || []).map(r => r.map((v, i): Cell => {
-        if (v === null || v === undefined) return null;
-        const k = cols[i].kind;
-        if (k === "date") {
-            const d = v instanceof Date ? v : new Date(v as string);
-            return isNaN(d.getTime()) ? null : d;
-        }
-        if (k === "nombre") { const n = Number(v); return isFinite(n) ? n : null; }
-        if (k === "booleen") return v === true || v === "true";
-        return String(v);
-    }));
-    return { cols, rows };
 }

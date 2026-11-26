@@ -1,17 +1,15 @@
 "use strict";
 
-// Rapport d'analyse téléchargeable : un PDF écrit à la main (pas de bibliothèque), texte, tableaux et barres.
-// Aucun import Power BI ni DOM : le module se teste dans Node.
+// Rapport d'analyse : en texte (copié dans Word depuis le visuel) et en PDF écrit à la main, sans bibliothèque
+// (utilisé par npm run test:ia). Aucun import Power BI ni DOM : le module se teste dans Node.
 
 import { decrirePlan } from "./engine";
+import { fmt } from "./format";
 import type { Synthese, Tour } from "./pipeline";
 import { Out, Resultat } from "./types";
 
-// ---------- mise en forme des valeurs (comme dans le visuel) ----------
-
-const NF = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 2 });
-const PF = new Intl.NumberFormat("fr-FR", { style: "percent", maximumFractionDigits: 1 });
-const val = (v: Out, part = false) => v === null ? "-" : typeof v === "number" ? (part ? PF.format(v) : NF.format(v)) : v;
+// valeur d'une cellule ; « - » plutôt que « – » pour une case vide (police Helvetica du PDF)
+const val = (v: Out, part = false) => fmt(v, part, "-");
 
 // ---------- PDF minimal : Helvetica, encodage WinAnsi, A4 ----------
 
@@ -21,7 +19,7 @@ const ENCRE: Couleur = [0.12, 0.16, 0.18], DOUX: Couleur = [0.36, 0.42, 0.44], T
 const FOND: Couleur = [0.965, 0.973, 0.976], LIGNE: Couleur = [0.89, 0.91, 0.92];
 
 // Helvetica n'a que les caractères WinAnsi : on remplace le reste
-export function winAnsi(s: string): string {
+function winAnsi(s: string): string {
     return s
         .replace(/[    ]/g, " ")
         .replace(/[‘’ʼ]/g, "'").replace(/[“”]/g, "\"")

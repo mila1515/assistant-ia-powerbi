@@ -28,7 +28,8 @@ Les mêmes briques servent aux **propositions d'analyses** (`proposer`, `SYSTEME
 
 ```text
 capabilities.json   champs (Colonnes, Valeurs), réglages, objet de filtre, accès réseau (Gemini, OpenAI)
-src/visual.ts       point d'entrée Power BI : chargement des lignes, interface, filtres du rapport, DAX, rapport
+src/visual.ts       point d'entrée Power BI : interface, questions, filtres du rapport, DAX, rapport
+src/donnees.ts      lecture des champs du visuel (table Power BI → colonnes typées et lignes)
 src/pipeline.ts     enchaînement des étapes, propositions d'analyses, synthèse vérifiée
 src/engine.ts       validation du plan et calcul : filtres, regroupements (dont périodes), agrégats, part du total
 src/guard.ts        extraction des nombres au format français et vérification
@@ -38,7 +39,8 @@ src/rapport.ts      rapport en texte (copié dans Word depuis le visuel) et en P
 src/ia.ts           choix du fournisseur d'après la clé : sk-… = OpenAI, sinon Gemini
 src/gemini.ts       client Gemini et les quatre consignes (plan, phrase, idées, synthèse)
 src/openai.ts       client OpenAI (Chat Completions, réponse JSON)
-src/ui.ts           cartes de réponse, chiffres clés, barres et courbes, « Voir le calcul »
+src/ui.ts           cartes de réponse, chiffres clés, barres et courbes, « Voir le calcul », zones à copier
+src/format.ts       mise en forme des nombres en français (interface et rapport)
 src/settings.ts     volet Format : clé, modèle, exemples de valeurs, lignes max
 src/types.ts        types partagés (aucun import Power BI : testables dans Node)
 tests/test.ts       tests hors ligne

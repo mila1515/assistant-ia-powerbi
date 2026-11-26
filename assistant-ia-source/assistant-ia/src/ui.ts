@@ -4,8 +4,9 @@
 // Tout est construit avec createElement (pas d'innerHTML) : rien de ce que renvoie Gemini n'est interprété comme du HTML.
 
 import { decrirePlan } from "./engine";
-import { Tour } from "./pipeline";
-import { Out, Resultat } from "./types";
+import { fmt, NF } from "./format";
+import type { Tour } from "./pipeline";
+import { Resultat } from "./types";
 
 type Attrs = Record<string, string>;
 
@@ -17,14 +18,37 @@ export function h<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, t
     return e;
 }
 
-const NF = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 2 });
-const PF = new Intl.NumberFormat("fr-FR", { style: "percent", maximumFractionDigits: 1 });
-
-export function fmt(v: Out, part = false): string {
-    if (v === null) return "–";
-    if (typeof v === "number") return part ? PF.format(v) : NF.format(v);
-    return v;
+export function vider(e: HTMLElement) {
+    while (e.firstChild) e.removeChild(e.firstChild);
 }
+
+// une rangée de questions cliquables
+export function boutonsQuestions(questions: string[], surClic: (q: string) => void): HTMLElement {
+    const s = h("div", "ia-sugg");
+    for (const q of questions) {
+        const b = h("button", "ia-chip", q, { type: "button" });
+        b.onclick = () => surClic(q);
+        s.appendChild(b);
+    }
+    return s;
+}
+
+// zone de texte en lecture seule : un clic sélectionne tout, pour qu'une copie à la main n'oublie rien
+export function zoneTexte(texte: string, lignes: number, label: string): HTMLTextAreaElement {
+    const zone = h("textarea", "ia-rapport-texte", undefined, { readonly: "true", rows: String(lignes), spellcheck: "false", "aria-label": label });
+    zone.value = texte;
+    zone.onclick = () => zone.select();
+    zone.onfocus = () => zone.select();
+    return zone;
+}
+
+// copie la zone ; si Power BI bloque la copie automatique, le texte reste sélectionné pour un Ctrl+C
+export function copier(zone: HTMLTextAreaElement): boolean {
+    zone.focus();
+    zone.select();
+    try { return document.execCommand("copy"); } catch { return false; }
+}
+
 
 function court(v: number): string {
     const a = Math.abs(v);
@@ -58,15 +82,7 @@ export function carte(t: Tour, surSuggestion: (q: string) => void): HTMLElement 
         if (g) box.appendChild(g);
     }
 
-    if (t.suggestions.length) {
-        const s = h("div", "ia-sugg");
-        for (const q of t.suggestions) {
-            const b = h("button", "ia-chip", q, { type: "button" });
-            b.onclick = () => surSuggestion(q);
-            s.appendChild(b);
-        }
-        box.appendChild(s);
-    }
+    if (t.suggestions.length) box.appendChild(boutonsQuestions(t.suggestions, surSuggestion));
 
     const pied = h("div", "ia-pied");
     if (t.type === "reponse") {

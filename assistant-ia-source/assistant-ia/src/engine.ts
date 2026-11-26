@@ -75,6 +75,11 @@ function enNombre(v: unknown): number | null {
     return null;
 }
 
+// « vrai », « oui », « 1 »… pour un filtre sur une colonne oui/non
+export function estVrai(v: unknown): boolean {
+    return ["true", "vrai", "oui", "1", "yes"].includes(norm(v));
+}
+
 // les valeurs texte de la colonne, pour remplacer « nord » par « Nord » ou refuser « Nordd »
 function valeursTexte(ds: Dataset, i: number): Map<string, string> {
     const m = new Map<string, string>();
@@ -152,8 +157,7 @@ function compiler(ds: Dataset, f: Filtre, cache: Map<number, Map<string, string>
     }
 
     if (col.kind === "booleen") {
-        const vrai = (v: unknown) => ["true", "vrai", "oui", "1", "yes"].includes(norm(v));
-        const cibles = brutes.map(vrai);
+        const cibles = brutes.map(estVrai);
         return row => {
             const b = row[i] === true;
             return op === "!=" ? b !== cibles[0] : cibles.includes(b);

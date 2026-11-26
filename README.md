@@ -92,7 +92,7 @@ Ce qui distingue ce projet d'un simple « chat branché sur des données » :
 
 **TypeScript** · **Power BI Visuals API 5.11** · **API Gemini** · **API OpenAI** · **DAX** · Less · Node.js (tests) · ESLint · esbuild
 
-Environ 2 100 lignes de TypeScript réparties en 13 fichiers.
+Environ 2 100 lignes de TypeScript réparties en 15 fichiers.
 
 ## 🚀 Installation en 5 minutes
 
@@ -123,7 +123,8 @@ npm run test:ia          # test de bout en bout avec la vraie IA, et rapport PDF
 
 ```text
 src/
-├── visual.ts     point d'entrée Power BI : données, interface, filtres, rapport
+├── visual.ts     point d'entrée Power BI : interface, questions, filtres, rapport
+├── donnees.ts    lecture des champs du visuel (table Power BI → colonnes typées)
 ├── pipeline.ts   orchestration : plan → calcul → phrase → vérification ; propositions ; synthèse
 ├── engine.ts     validation du plan et calcul (filtres, regroupements, périodes, agrégats)
 ├── guard.ts      extraction et vérification de chaque chiffre de la réponse
@@ -133,7 +134,8 @@ src/
 ├── ia.ts         choix du fournisseur d'après la clé
 ├── gemini.ts     client Gemini et consignes (plan, phrase, idées, synthèse)
 ├── openai.ts     client OpenAI
-└── ui.ts         cartes de réponse, chiffres clés, graphiques
+├── ui.ts         cartes de réponse, chiffres clés, graphiques
+└── format.ts     mise en forme des nombres en français
 tests/
 ├── test.ts       tests hors ligne sur ventes_exemple.csv
 └── live.ts       test avec la vraie IA (clé lue dans .env, jamais versionné)
