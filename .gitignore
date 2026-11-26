@@ -1,0 +1,23 @@
+# Clés API : jamais dans le dépôt
+.env
+**/.env
+.env.*
+!.env.example
+
+# Historique local de VS Code (contient d'anciennes copies de .env)
+.history/
+
+# Dépendances et fichiers générés
+node_modules/
+**/dist/
+**/.tmp/
+**/webpack.statistics.*.html
+**/tests/*.js
+**/tests/rapport-test.pdf
+
+# Rapports Power BI personnels
+*.pbix
+
+# Système
+.DS_Store
+Thumbs.db

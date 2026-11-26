@@ -1,0 +1,120 @@
+@encre: #1F2A2E;
+@doux: #5B6B70;
+@pale: #8A979B;
+@ligne: #E3E8EA;
+@fond: #F6F8F9;
+@teal: #0F6E69;
+@teal-pale: #E2F1EF;
+@ambre: #8A5A0B;
+@ambre-pale: #FBF0DC;
+@rouge: #A63A2A;
+@rouge-pale: #FBE9E5;
+
+.ia {
+    font-family: "Segoe UI", wf_segoe-ui_normal, helvetica, arial, sans-serif;
+    color: @encre;
+    font-size: 13px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    gap: 8px;
+}
+
+.ia-tete { display: flex; align-items: center; gap: 8px; }
+.ia-logo { color: @teal; font-size: 16px; }
+.ia-nom { font-weight: 600; }
+.ia-statut { margin-left: auto; color: @pale; font-size: 11px; }
+
+.ia-fil { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; padding-right: 2px; }
+
+.ia-form { display: flex; gap: 6px; }
+.ia-input {
+    flex: 1; min-width: 0; height: 32px; padding: 0 10px; font: inherit; color: @encre;
+    border: 1px solid @ligne; border-radius: 8px; background: #fff;
+    &:focus { outline: none; border-color: @teal; }
+}
+.ia-envoyer, .ia-chip {
+    font: inherit; cursor: pointer; border-radius: 8px; border: 1px solid @ligne; background: #fff; color: @encre;
+    &:hover { border-color: @teal; color: @teal; }
+    &:disabled { opacity: .5; cursor: default; }
+}
+.ia-envoyer { padding: 0 14px; background: @teal; color: #fff; border-color: @teal; &:hover { color: #fff; } }
+
+.ia-vide { margin: auto 0; text-align: left; }
+.ia-tour { display: flex; flex-direction: column; gap: 6px; }
+.ia-q { align-self: flex-end; max-width: 85%; background: @teal-pale; color: #0B4F4B; padding: 6px 10px; border-radius: 10px 10px 2px 10px; }
+.ia-rep { border: 1px solid @ligne; border-radius: 10px; padding: 10px 12px; background: #fff; display: flex; flex-direction: column; gap: 8px; }
+.ia-impossible { background: @ambre-pale; border-color: #F1DDB4; }
+.ia-erreur { background: @rouge-pale; border-color: #F2CBC2; }
+.ia-titre { font-weight: 600; font-size: 14px; }
+.ia-texte { margin: 0; line-height: 1.5; color: @doux; }
+.ia-charge { color: @pale; font-style: italic; }
+
+.ia-chiffres { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 6px; }
+.ia-chiffre { background: @fond; border-radius: 8px; padding: 6px 8px; }
+.ia-cl { color: @doux; font-size: 11px; }
+.ia-cv { font-size: 15px; font-weight: 600; }
+
+.ia-graph { display: flex; flex-direction: column; gap: 4px; }
+.ia-barre { display: grid; grid-template-columns: minmax(60px, 30%) 1fr auto; align-items: center; gap: 6px; font-size: 11px; color: @doux; }
+.ia-bl { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ia-piste { height: 10px; background: @fond; border-radius: 3px; overflow: hidden; }
+.ia-b { display: block; height: 100%; background: @teal; border-radius: 3px; }
+.ia-bv { min-width: 44px; text-align: right; }
+.ia-ligne { max-height: 140px; }
+.ia-trait { stroke: @teal; stroke-width: 2; stroke-linejoin: round; }
+.ia-point { fill: @teal; }
+.ia-svgt { fill: @doux; font-size: 10px; }
+
+.ia-sugg { display: flex; flex-wrap: wrap; gap: 6px; }
+.ia-chip { padding: 4px 10px; font-size: 12px; text-align: left; }
+
+.ia-pied { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; border-top: 1px solid @ligne; padding-top: 8px; }
+.ia-badge { font-size: 11px; padding: 2px 8px; border-radius: 6px; }
+.ia-ok { background: @teal-pale; color: #0B4F4B; }
+.ia-ko { background: @ambre-pale; color: @ambre; }
+.ia-info { background: @fond; color: @doux; }
+.ia-meta { color: @pale; font-size: 11px; margin: 0; }
+
+.ia-details {
+    font-size: 12px;
+    summary { cursor: pointer; color: @teal; }
+    .ia-phrase { margin: 6px 0; color: @encre; }
+}
+.ia-table {
+    border-collapse: collapse; width: 100%; margin: 6px 0; font-size: 11px;
+    th, td { border-bottom: 1px solid @ligne; padding: 3px 6px; text-align: left; }
+    th { color: @doux; font-weight: 600; }
+    td.n { text-align: right; font-variant-numeric: tabular-nums; }
+}
+.ia-json { background: @fond; border-radius: 6px; padding: 8px; overflow-x: auto; font-size: 11px; margin: 6px 0 0; }
+
+.ia-btn-idees { padding: 2px 8px; font-size: 11px; color: @teal; border-color: @teal-pale; background: @teal-pale; }
+.ia-idees { display: flex; flex-direction: column; gap: 6px; }
+.ia-idee {
+    display: flex; flex-direction: column; gap: 2px; text-align: left; font: inherit; cursor: pointer;
+    padding: 8px 10px; border: 1px solid @ligne; border-radius: 8px; background: @fond; color: @encre;
+    &:hover { border-color: @teal; background: #fff; }
+}
+.ia-idee-t { font-weight: 600; }
+.ia-idee-t::before { content: "→ "; color: @teal; }
+.ia-idee-p { color: @doux; font-size: 12px; }
+
+.ia-filtres { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; border-top: 1px solid @ligne; padding-top: 8px; }
+.ia-filtres .ia-chip { padding: 2px 8px; font-size: 11px; }
+.ia-puce-filtre {
+    align-self: flex-start; font: inherit; font-size: 11px; cursor: pointer; padding: 3px 10px; border-radius: 12px;
+    border: 1px solid @teal; background: @teal; color: #fff;
+    &:hover { background: #fff; color: @teal; }
+}
+.ia-constats { margin: 0; padding-left: 18px; color: @encre; line-height: 1.5; }
+.ia-rapport-texte {
+    width: 100%; box-sizing: border-box; min-height: 120px; resize: vertical; font: 11px/1.45 Consolas, "Segoe UI", monospace;
+    color: @encre; background: @fond; border: 1px solid @ligne; border-radius: 8px; padding: 8px; white-space: pre; overflow: auto;
+}
+.ia-dax { border-top: 1px solid @ligne; padding-top: 6px; }
+.ia-code { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+.ia-code-tete { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.ia-code-tete .ia-chip { padding: 2px 10px; font-size: 11px; }
