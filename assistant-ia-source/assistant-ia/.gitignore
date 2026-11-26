@@ -1,9 +1,0 @@
-node_modules/
-dist/
-.tmp/
-webpack.statistics.*.html
-tests/*.js
-tests/rapport-test.pdf
-
-# clés API
-.env

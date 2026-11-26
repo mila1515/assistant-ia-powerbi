@@ -323,9 +323,17 @@ export class Visual implements IVisual {
             values: typees,
             requireSingleSelection: false
         };
-        this.host.applyJsonFilter(filtre, "general", "filter", powerbi.FilterAction.merge);
-        this.filtreActif = `${col.name} = ${libelle}`;
-        this.afficherEtat();
+        try {
+            this.host.applyJsonFilter(filtre, "general", "filter", powerbi.FilterAction.merge);
+            this.filtreActif = `${col.name} = ${libelle}`;
+            this.afficherEtat();
+        } catch (e) {
+            // une erreur ici était silencieuse : on l'affiche pour savoir pourquoi le filtre ne part pas
+            this.filtreActif = "";
+            this.afficherEtat();
+            this.puceFiltre.style.display = "";
+            this.puceFiltre.textContent = `Filtre refusé par Power BI (${col.cible.table}[${col.cible.colonne}]) : ${e instanceof Error ? e.message : String(e)}`;
+        }
     }
 
     private retirerFiltre() {

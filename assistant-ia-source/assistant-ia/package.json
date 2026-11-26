@@ -12,12 +12,10 @@
     "start": "pbiviz start",
     "package": "pbiviz package",
     "lint": "npx eslint .",
-    "test": "npx --yes esbuild tests/test.ts --bundle --platform=node --outfile=tests/test.js --log-level=warning && node tests/test.js ventes_exemple.csv",
-    "test:ia": "npx --yes esbuild tests/live.ts --bundle --platform=node --outfile=tests/live.js --log-level=warning && node tests/live.js ventes_exemple.csv"
+    "test": "npx --yes esbuild tests/test.ts --bundle --platform=node --outfile=tests/test.js --log-level=warning && node tests/test.js ../../ventes_exemple.csv",
+    "test:ia": "npx --yes esbuild tests/live.ts --bundle --platform=node --outfile=tests/live.js --log-level=warning && node tests/live.js ../../ventes_exemple.csv"
   },
   "dependencies": {
-    "@types/d3": "7.4.3",
-    "d3": "7.9.0",
     "powerbi-visuals-api": "5.11.1",
     "powerbi-visuals-utils-formattingmodel": "6.0.4"
   },

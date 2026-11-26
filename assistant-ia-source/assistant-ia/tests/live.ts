@@ -26,7 +26,7 @@ if (!cle) {
 }
 const modele = (env.MODELE || "").trim();
 
-const fichier = process.argv[2] || "ventes_exemple.csv";
+const fichier = process.argv[2] || "../../ventes_exemple.csv";
 const txt = readFileSync(fichier, "utf8").replace(/^﻿/, "").trim().split("\n");
 const ds: Dataset = {
     cols: [

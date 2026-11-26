@@ -109,7 +109,7 @@ export async function repondre(question: string, ds: Dataset, avecExemples: bool
 // Trois questions de départ construites à partir des colonnes, pour ne pas commencer devant une page blanche
 export function suggestions(ds: Dataset): string[] {
     const nom = (i: number) => ds.cols[i].name.replace(/^(somme|moyenne|nombre|total|minimum|maximum)\s+(de|des|d')\s*/i, "").toLowerCase();
-    const idx = ds.cols.map((c, i) => i);
+    const idx = ds.cols.map((_, i) => i);
     // la mesure : la colonne « valeur » numérique au plus gros total (souvent le montant)
     const nums = idx.filter(i => ds.cols[i].kind === "nombre" && ds.cols[i].role === "valeur");
     const tot = (i: number) => ds.rows.reduce((s, r) => s + (typeof r[i] === "number" ? Math.abs(r[i] as number) : 0), 0);
