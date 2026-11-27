@@ -31,6 +31,14 @@ export interface Tour {
 
 export type Etape = (texte: string) => void;
 
+// Combien de valeurs différentes compte le regroupement, sous un nom que l'IA comprend
+// (« Client_differents: 420 » → « 420 clients ») plutôt qu'un « groupes » technique qu'elle recopiait tel quel.
+function nombreDeGroupes(r: Resultat): Record<string, number> {
+    if (!r.nbCles) return {};
+    const nom = r.nbCles === 1 ? `${r.colonnes[0]}_differents` : `combinaisons_${r.colonnes.slice(0, r.nbCles).join("_")}_differentes`;
+    return { [nom]: r.nbGroupes };
+}
+
 // Le total des lignes du résultat (« les 10 premiers clients totalisent… ») est calculé ici :
 // un modèle de langage additionne mal, et un chiffre faux serait signalé au lieu d'être juste.
 function sommeDesLignes(r: Resultat, plan: Plan): { somme_des_lignes_du_resultat?: number } {
@@ -93,7 +101,7 @@ export async function repondre(question: string, ds: Dataset, avecExemples: bool
         lignes: resultat.lignes.slice(0, 30),
         total_toutes_lignes_filtrees: resultat.total,
         ...sommeDesLignes(resultat, exec.plan),
-        groupes: resultat.nbGroupes,
+        ...nombreDeGroupes(resultat),
         ...(resultat.lignes.length > 30 || resultat.nbGroupes > resultat.lignes.length ? { note: "résultat tronqué, seules les premières lignes sont montrées" } : {})
     };
     const msgs: Message[] = [{ role: "user", text: `Question : ${question}\nCalcul exécuté : ${JSON.stringify(exec.plan)}\nRésultat : ${JSON.stringify(extrait)}` }];
@@ -161,7 +169,7 @@ export async function synthese(tours: Tour[], appel: Appel): Promise<Synthese> {
     const analyses = faites.map(t => ({
         question: t.question,
         calcul: decrirePlan(t.plan!),
-        resultat: { colonnes: t.resultat!.colonnes, lignes: t.resultat!.lignes.slice(0, 15), total: t.resultat!.total, ...sommeDesLignes(t.resultat!, t.plan!), groupes: t.resultat!.nbGroupes },
+        resultat: { colonnes: t.resultat!.colonnes, lignes: t.resultat!.lignes.slice(0, 15), total: t.resultat!.total, ...sommeDesLignes(t.resultat!, t.plan!), ...nombreDeGroupes(t.resultat!) },
         reponse: t.texte
     }));
     const hors = tours.filter(t => t.type === "impossible").map(t => ({ question: t.question, raison: t.texte }));

@@ -4,7 +4,7 @@
     "displayName": "Assistant IA (générique)",
     "guid": "assistantIA1155748C4EF240189B7184A5403C904B",
     "visualClassName": "Visual",
-    "version": "2.0.2.0",
+    "version": "2.0.3.0",
     "description": "Pose des questions en français sur les colonnes glissées dans le visuel. Gemini choisit le calcul, le visuel calcule et vérifie chaque chiffre.",
     "supportUrl": "https://aistudio.google.com",
     "gitHubUrl": ""
@@ -22,5 +22,5 @@
   "capabilities": "capabilities.json",
   "dependencies": null,
   "stringResources": [],
-  "version": "2.0.2.0"
+  "version": "2.0.3.0"
 }

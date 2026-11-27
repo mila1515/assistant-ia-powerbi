@@ -33,12 +33,15 @@ export function lireTableau(dv: DataView | undefined): Dataset | null {
     if (!t || !t.columns?.length) return null;
     const vus = new Map<string, number>();
     const cols = t.columns.map(c => {
-        // deux champs du même nom : « Montant », « Montant (2) »
+        const role = (c.roles?.valeurs ? "valeur" : "colonne") as "valeur" | "colonne";
         let name = c.displayName || c.queryName || "Colonne";
+        // « Sum of Montant » / « Somme de Montant » → « Montant » : l'assistant écrit lui-même « Somme de Montant »
+        // (seulement pour la somme : un « Count of Client » reste un comptage, pas le client)
+        if (role === "valeur") name = name.replace(/^(sum of|somme de|total de)\s+/i, "") || name;
+        // deux champs du même nom : « Montant », « Montant (2) »
         const k = vus.get(name) || 0;
         vus.set(name, k + 1);
         if (k) name = `${name} (${k + 1})`;
-        const role = (c.roles?.valeurs ? "valeur" : "colonne") as "valeur" | "colonne";
         const cible = cibleDe(c.queryName || "", role);
         return { name, kind: genre(c.type), role, ...(cible ? { cible } : {}) };
     });
