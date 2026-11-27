@@ -157,14 +157,6 @@ tests/
 - Support multi-tables (relations du modèle)
 - Évaluation automatique de la qualité des plans sur un jeu de questions de référence
 
-## 👩‍💻 Auteure
+## 📄 Licence
 
-**Djamila** · étudiante à l'EPSI · [@mila1515](https://github.com/mila1515)
-
-Projet mené de bout en bout : besoin, architecture, moteur de calcul, intégration Power BI et IA, tests. Développé avec Claude Code comme assistant de programmation.
-
----
-
-<div align="center">
-<sub>Licence MIT · Si ce projet vous intéresse, une ⭐ fait toujours plaisir.</sub>
-</div>
+[MIT](LICENSE)
