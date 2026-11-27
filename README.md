@@ -1,97 +1,168 @@
-# Assistant IA pour Power BI
+<div align="center">
 
-Un visuel personnalisé Power BI qui répond **en français** à des questions sur tes données, **sans que l'IA voie jamais les lignes** et **sans laisser passer un chiffre inventé**.
+# ✦ Assistant IA pour Power BI
 
-> « Quelle région a le plus vendu en 2025 ? » → *Nord, 1,93 M€, soit 35,3 % du total*, avec le graphique, le détail du calcul et le même calcul en DAX.
+**Posez une question en français à votre rapport Power BI. Obtenez une réponse chiffrée, vérifiée, et le code DAX qui la prouve.**
 
-Projet réalisé dans le cadre de l'EPSI.
+*L'IA ne voit jamais vos données. Elle ne peut pas inventer un chiffre.*
+
+![Power BI](https://img.shields.io/badge/Power%20BI-Custom%20Visual-F2C811?logo=powerbi&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.5-3178C6?logo=typescript&logoColor=white)
+![Gemini](https://img.shields.io/badge/Gemini-supporté-8E75B2?logo=googlegemini&logoColor=white)
+![OpenAI](https://img.shields.io/badge/OpenAI-supporté-412991?logo=openai&logoColor=white)
+![DAX](https://img.shields.io/badge/DAX-généré%20automatiquement-0F6E69)
+![Tests](https://img.shields.io/badge/tests-13%20passent-2ea44f)
+![Licence](https://img.shields.io/badge/licence-MIT-blue)
+
+[Démo](#-démo) · [L'assistant](#-lassistant) · [Architecture](#-architecture) · [Choix techniques](#-choix-techniques) · [Installation](#-installation-en-5-minutes)
+
+</div>
 
 ---
 
-## Ce que fait le visuel
+## 🎯 L'assistant
 
-| Fonction | Description |
-|---|---|
-| **Questions en français** | Pose une question, l'assistant répond avec une phrase, 2 à 3 chiffres clés et un graphique (barres ou courbe). Il comprend les questions de suivi (« Et en 2024 ? »). |
-| **Propositions d'analyses** | Dès que les données sont chargées, l'assistant résume le tableau et propose 5 analyses adaptées, à lancer d'un clic (bouton « ✦ Idées »). |
-| **Chiffres vérifiés** | Chaque chiffre écrit par l'IA est comparé au résultat du calcul. Un chiffre introuvable est signalé, jamais affiché comme vrai. |
-| **Refus honnête** | Une question hors des données (marge absente, prévision, cause) reçoit « Pas dans tes données » au lieu d'une invention. |
-| **Filtrer le rapport** | Sous une réponse, des boutons « Filtrer le rapport : Nord, Sud… » filtrent toute la page Power BI. |
-| **Voir le DAX** | Le calcul traduit en DAX (sans IA) : une requête pour la vue Requête DAX, qui redonne les mêmes chiffres, et des mesures à ajouter au modèle. |
-| **Rapport d'analyse** | « 📋 Rapport » rédige une synthèse neutre (constats chiffrés, sans jugement ni recommandation) et le rapport complet, à copier dans Word. |
-| **Gemini ou OpenAI** | Colle une clé Gemini (`AIza…`, gratuite) ou OpenAI (`sk-…`) : le visuel choisit le fournisseur tout seul. |
+L'Assistant IA est un visuel que l'on ajoute à un rapport Power BI. On lui pose une question en français sur les données du rapport, et il répond par une phrase, des chiffres clés et un graphique.
 
-## Comment ça marche
+Son travail, à chaque question :
 
-```text
- Question ──► 1. Le visuel décrit les colonnes (noms, types, exemples) ─► jamais les lignes
-              2. L'IA renvoie un PLAN de calcul en JSON (somme de Montant par Région, filtré sur 2025, top 3)
-              3. Le visuel vérifie le plan (colonnes et valeurs existantes) et CALCULE lui-même
-              4. L'IA rédige la phrase à partir des quelques lignes du résultat
-              5. Le visuel vérifie chaque chiffre de la phrase dans le résultat
-              6. Affichage : réponse, chiffres clés, graphique, « Voir le calcul », « Voir le DAX »
+1. **Comprendre la question** : l'IA reçoit la description des colonnes (jamais les lignes) et choisit le calcul à faire.
+2. **Calculer** : le visuel vérifie ce calcul puis l'exécute lui-même, sur les données du rapport.
+3. **Répondre** : l'IA rédige la phrase à partir du résultat.
+4. **Vérifier** : chaque chiffre de la phrase est comparé au résultat ; un chiffre introuvable est signalé.
+5. **Prouver** : le calcul est fourni en DAX, pour le refaire dans Power BI et retrouver les mêmes chiffres.
+
+## 🎬 Démo
+
+**Une question, une réponse vérifiée (6/6 chiffres), des boutons pour filtrer le rapport, et le DAX qui la prouve :**
+
+![Réponse de l'assistant : chiffres vérifiés, graphique, boutons « Filtrer le rapport », boutons Idées et Rapport, code DAX généré](docs/reponse-verifiee-dax.png)
+
+**La preuve : la requête DAX générée, exécutée dans Power BI, redonne les mêmes chiffres.**
+
+![Requête DAX générée par l'assistant, exécutée dans la vue Requête DAX de Power BI Desktop](docs/verification-dax.png)
+
+## ✨ Fonctionnalités
+
+| | Fonction | En pratique |
+|---|---|---|
+| 💬 | **Questions en français** | « Top 3 des régions en 2025 ? », puis « Et en 2024 ? » : l'assistant garde le contexte. |
+| 💡 | **Propositions d'analyses** | À l'ouverture, il résume le jeu de données et propose 5 analyses pertinentes, à lancer d'un clic. |
+| ✅ | **Chiffres vérifiés** | Badge « 3/3 chiffres vérifiés » sous chaque réponse ; une réécriture automatique si un chiffre ne colle pas. |
+| 🚫 | **Refus honnête** | « Quelle est la marge ? » sans colonne de marge → « Pas dans tes données », avec des questions faisables. |
+| 🎛️ | **Filtrer le rapport** | Sous une réponse, « Filtrer le rapport : Nord » filtre tous les graphiques de la page. |
+| 🧮 | **Voir le DAX** | Requête prête pour la vue Requête DAX, et mesures prêtes pour le modèle. |
+| 📋 | **Rapport d'analyse** | Synthèse neutre de toute la session (constats chiffrés, sans jugement ni recommandation), à copier dans Word. |
+| 🔌 | **Gemini ou OpenAI** | Le fournisseur est reconnu à la clé (`AIza…` ou `sk-…`), avec bascule automatique entre modèles en cas de surcharge. |
+
+## 🏗 Architecture
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as Utilisateur
+    participant V as Visuel Power BI
+    participant IA as IA (Gemini / OpenAI)
+
+    U->>V: « Quelle région a le plus vendu en 2025 ? »
+    V->>IA: Description des colonnes (noms, types, exemples) — jamais les lignes
+    IA-->>V: Plan JSON : somme(Montant) par Région, filtre année = 2025, top 3
+    V->>V: Valide le plan (colonnes, valeurs) puis calcule sur les lignes du rapport
+    V->>IA: Question + résultat agrégé (quelques lignes)
+    IA-->>V: Phrase rédigée en français
+    V->>V: Vérifie chaque chiffre de la phrase dans le résultat
+    V-->>U: Réponse + chiffres clés + graphique + DAX équivalent
 ```
 
-L'IA ne sert qu'à **comprendre la question** et à **rédiger la réponse**. Le calcul est fait dans le visuel, sur les lignes du rapport, déjà filtrées par les segments.
+Si le plan est invalide (colonne inexistante, valeur inconnue), le visuel renvoie l'erreur précise à l'IA, qui corrige une fois. Si un chiffre de la phrase est introuvable, l'IA réécrit une fois ; sinon, le chiffre est signalé à l'utilisateur.
 
-## Installation (5 minutes)
+## 🧠 Choix techniques
 
-1. **Une clé API** : Gemini gratuite sur [aistudio.google.com/apikey](https://aistudio.google.com/apikey), ou OpenAI sur [platform.openai.com/api-keys](https://platform.openai.com/api-keys) (payant, avec crédit).
-2. **Importer le visuel** dans Power BI Desktop : volet *Visualisations* > `…` > *Importer un visuel à partir d'un fichier* > [`Assistant_IA_Power_BI.pbiviz`](Assistant_IA_Power_BI.pbiviz).
-3. **Charger des données**, par exemple [`ventes_exemple.csv`](ventes_exemple.csv) (séparateur `;`, virgule décimale).
-4. **Ajouter le visuel** sur la page et glisser les champs :
-   - **Colonnes** : un identifiant de ligne (`IdVente`), puis `Date`, `Région`, `Catégorie`, `Canal`, `Client`
+Ce qui distingue ce projet d'un simple « chat branché sur des données » :
+
+- **Anti-hallucination par construction.** L'IA produit un *plan*, jamais un résultat. Un module de vérification extrait chaque nombre de la réponse (formats français : `1,93 M€`, `35,3 %`, `12 400`) et le confronte aux valeurs du calcul, à leurs écarts, ratios et pourcentages, à l'arrondi près.
+- **Confidentialité par conception.** Seuls le schéma et des résultats agrégés quittent Power BI. Les segments et filtres du rapport s'appliquent avant tout calcul.
+- **Un compilateur plan → DAX, sans IA.** Le plan validé est traduit de façon déterministe en requête DAX (`GROUPBY`, `TOPN`, `CURRENTGROUP`…) et en mesures `CALCULATE`, avec les vrais noms de tables et de colonnes du modèle. Le DAX ne peut donc pas « halluciner ».
+- **Couche fournisseur interchangeable.** Gemini et OpenAI derrière une même interface, avec repli sur d'autres modèles, nouvelle tentative sur les erreurs passagères (429, 503), délai maximal par appel, et mise à l'écart temporaire d'un modèle saturé.
+- **Zéro dépendance superflue.** Le rapport PDF est écrit à la main (format PDF, police Helvetica, tableaux et barres), sans bibliothèque. L'interface est construite sans `innerHTML` : rien de ce que renvoie l'IA n'est interprété comme du HTML.
+- **Moteur testable hors de Power BI.** Calcul, vérification, DAX et rapport sont des modules TypeScript purs, testés dans Node sur un jeu de 6 000 lignes.
+- **Ancré dans les contraintes réelles.** Le visuel tourne dans un iframe isolé de Power BI. Les téléchargements y sont souvent bloqués par les administrateurs, donc le rapport se copie au lieu de se télécharger.
+
+## 🧰 Stack
+
+**TypeScript** · **Power BI Visuals API 5.11** · **API Gemini** · **API OpenAI** · **DAX** · Less · Node.js (tests) · ESLint · esbuild
+
+Environ 2 100 lignes de TypeScript réparties en 13 fichiers.
+
+## 🚀 Installation en 5 minutes
+
+1. **Une clé API** : Gemini gratuite sur [aistudio.google.com/apikey](https://aistudio.google.com/apikey), ou OpenAI sur [platform.openai.com/api-keys](https://platform.openai.com/api-keys).
+2. **Importer le visuel** dans Power BI Desktop : *Visualisations* > `…` > *Importer un visuel à partir d'un fichier* > [`Assistant_IA_Power_BI.pbiviz`](Assistant_IA_Power_BI.pbiviz).
+3. **Charger des données**, par exemple [`ventes_exemple.csv`](ventes_exemple.csv) (6 095 ventes, séparateur `;`).
+4. **Glisser les champs** dans le visuel :
+   - **Colonnes** : un identifiant de ligne (`IdVente`), `Date`, `Région`, `Catégorie`, `Canal`, `Client`
    - **Valeurs** : `Montant`, `Quantité`
 5. **Coller la clé** : *Format du visuel* > *Assistant IA* > *Clé API (Gemini ou OpenAI)*.
 
-Conseils :
-- Mets toujours **un identifiant de ligne** dans *Colonnes*, sinon Power BI fusionne les lignes identiques et les comptages deviennent faux.
-- Pour une date, choisis **le champ Date** et non la *Hiérarchie de dates* : le visuel regroupe lui-même par année, trimestre, mois ou jour.
+> 💡 Mettez toujours un **identifiant de ligne** dans *Colonnes*, et choisissez le champ **Date** plutôt que la *Hiérarchie de dates*.
 
-## Développement
-
-Le code source est dans [`assistant-ia-source/assistant-ia`](assistant-ia-source/assistant-ia). Détails techniques : [README du visuel](assistant-ia-source/assistant-ia/README.md).
+## 🛠 Développement
 
 ```bash
 cd assistant-ia-source/assistant-ia
 npm install
-npm test               # 13 tests du moteur de calcul et de la vérification, sans IA
-npx pbiviz package     # crée dist/*.pbiviz
+npm test                 # 13 tests : moteur de calcul, vérification, pipeline complet (IA simulée)
+npx pbiviz package       # génère dist/*.pbiviz
+
+cp .env.example .env     # puis ajoutez OPENAI_API_KEY ou GEMINI_API_KEY
+npm run test:ia          # test de bout en bout avec la vraie IA, et rapport PDF dans tests/
 ```
 
-Tester avec la vraie IA, sans Power BI :
-
-```bash
-cp .env.example .env   # puis remplis OPENAI_API_KEY ou GEMINI_API_KEY
-npm run test:ia        # propositions, questions, synthèse et rapport PDF dans tests/rapport-test.pdf
-```
-
-### Structure
+<details>
+<summary><b>Structure du code</b></summary>
 
 ```text
-src/visual.ts     point d'entrée Power BI : données, interface, filtres, rapport
-src/pipeline.ts   les étapes enchaînées (plan → calcul → phrase → vérification), propositions, synthèse
-src/engine.ts     validation du plan et calcul (filtres, regroupements, agrégats)
-src/guard.ts      vérification de chaque chiffre de la réponse
-src/schema.ts     description des colonnes envoyée à l'IA (sans les lignes)
-src/ia.ts         choix du fournisseur d'après la clé
-src/gemini.ts     appels Gemini et consignes (plan, phrase, idées, synthèse)
-src/openai.ts     appels OpenAI
-src/dax.ts        traduction du plan en requête DAX et en mesures
-src/rapport.ts    rapport en texte et en PDF (sans bibliothèque)
-src/ui.ts         cartes de réponse, chiffres clés, graphiques
-tests/            tests hors ligne et test avec la vraie IA
+src/
+├── visual.ts     point d'entrée Power BI : données, interface, filtres, rapport
+├── pipeline.ts   orchestration : plan → calcul → phrase → vérification ; propositions ; synthèse
+├── engine.ts     validation du plan et calcul (filtres, regroupements, périodes, agrégats)
+├── guard.ts      extraction et vérification de chaque chiffre de la réponse
+├── schema.ts     description des colonnes envoyée à l'IA (sans les lignes)
+├── dax.ts        compilateur plan → requête DAX et mesures
+├── rapport.ts    rapport en texte et en PDF, écrit sans bibliothèque
+├── ia.ts         choix du fournisseur d'après la clé
+├── gemini.ts     client Gemini et consignes (plan, phrase, idées, synthèse)
+├── openai.ts     client OpenAI
+└── ui.ts         cartes de réponse, chiffres clés, graphiques
+tests/
+├── test.ts       tests hors ligne sur ventes_exemple.csv
+└── live.ts       test avec la vraie IA (clé lue dans .env, jamais versionné)
 ```
 
-## Sécurité et limites
+</details>
 
-- **Les données restent dans Power BI.** L'IA reçoit les noms et types de colonnes, quelques exemples de valeurs (désactivable dans le volet Format) et les quelques lignes agrégées d'un résultat.
-- **La clé API est enregistrée dans le fichier `.pbix`** : toute personne qui peut modifier le rapport peut la lire. C'est acceptable pour une démo. En entreprise, il faudrait un petit serveur qui garde la clé.
-- Avec une clé Gemini gratuite, Google peut utiliser les requêtes pour améliorer ses produits : pas de données confidentielles.
-- Opérations prises en charge : somme, moyenne, min, max, nombre de lignes, nombre distinct ; 0 à 2 regroupements ; filtres ; tri, top N, part du total. Pas de prévisions.
-- Le DAX n'est généré que pour les champs glissés directement depuis une table (pas pour les mesures existantes).
-- Beaucoup d'organisations bloquent les téléchargements depuis les visuels : le rapport se copie donc dans Word.
+## ⚖️ Limites assumées
 
-## Licence
+- Opérations : somme, moyenne, min, max, comptage, comptage distinct ; 0 à 2 regroupements ; filtres ; top N ; part du total. Pas de prévision ni d'explication des causes : les données ne les contiennent pas.
+- L'IA ne voit que les champs glissés dans le visuel, pas tout le modèle.
+- La clé API est stockée dans le fichier `.pbix`. Pour une démo, c'est acceptable ; en production, un petit serveur intermédiaire garderait la clé.
+- Le DAX est généré pour les colonnes d'une même table, pas pour les mesures existantes.
 
-MIT
+## 🗺 Pistes d'évolution
+
+- Serveur intermédiaire pour sortir la clé API du rapport
+- Génération de la mesure DAX directement dans le modèle (`DEFINE MEASURE` + mise à jour du modèle)
+- Support multi-tables (relations du modèle)
+- Évaluation automatique de la qualité des plans sur un jeu de questions de référence
+
+## 👩‍💻 Auteure
+
+**Djamila** · étudiante à l'EPSI · [@mila1515](https://github.com/mila1515)
+
+Projet mené de bout en bout : besoin, architecture, moteur de calcul, intégration Power BI et IA, tests. Développé avec Claude Code comme assistant de programmation.
+
+---
+
+<div align="center">
+<sub>Licence MIT · Si ce projet vous intéresse, une ⭐ fait toujours plaisir.</sub>
+</div>
