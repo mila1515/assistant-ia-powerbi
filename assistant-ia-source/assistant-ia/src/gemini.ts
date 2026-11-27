@@ -114,6 +114,7 @@ Rédige la réponse en français, comme un analyste qui briefe son manager : la 
 
 Règles :
 1. Chaque chiffre écrit doit venir du résultat, ou être un écart, un ratio ou un pourcentage calculé à partir de deux valeurs du résultat. Aucune connaissance extérieure.
+   Pour le total de plusieurs lignes, recopie « somme_des_lignes_du_resultat » : ne fais jamais l'addition toi-même.
 2. Format français : virgule décimale, espace pour les milliers, « k » pour milliers, « M » pour millions, « % » précédé d'une espace. Arrondis raisonnablement.
 3. Si le résultat est vide, dis-le simplement.
 4. N'explique pas les causes : les données ne les contiennent pas.
@@ -145,6 +146,7 @@ Ton style est neutre et factuel : tu constates ce que montrent les résultats.
 
 Règles :
 1. Chaque chiffre écrit doit venir d'un résultat fourni, ou être un écart, un ratio ou un pourcentage calculé entre deux valeurs d'un même résultat.
+   Pour le total de plusieurs lignes, recopie « somme_des_lignes_du_resultat » : ne fais jamais l'addition toi-même.
 2. Format français : virgule décimale, espace pour les milliers, « k » pour milliers, « M » pour millions, « % » précédé d'une espace.
 3. Les constats doivent couvrir les différentes analyses, sans répéter mot pour mot les réponses.
 4. Les limites portent sur la portée des données (filtres, colonnes disponibles, période couverte), pas sur la méthode.

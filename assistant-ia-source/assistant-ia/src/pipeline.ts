@@ -31,6 +31,14 @@ export interface Tour {
 
 export type Etape = (texte: string) => void;
 
+// Le total des lignes du résultat (« les 10 premiers clients totalisent… ») est calculé ici :
+// un modèle de langage additionne mal, et un chiffre faux serait signalé au lieu d'être juste.
+function sommeDesLignes(r: Resultat, plan: Plan): { somme_des_lignes_du_resultat?: number } {
+    if (!r.nbCles || (plan.operation !== "somme" && plan.operation !== "nombre_lignes")) return {};
+    const s = r.lignes.reduce((acc, l) => acc + (typeof l[r.nbCles] === "number" ? l[r.nbCles] as number : 0), 0);
+    return { somme_des_lignes_du_resultat: Math.round(s * 100) / 100 };
+}
+
 const AVEC_HISTORIQUE = 3;
 
 export async function repondre(question: string, ds: Dataset, avecExemples: boolean, historique: Tour[], appel: Appel, etape: Etape = () => { /* rien */ }): Promise<Tour> {
@@ -84,6 +92,7 @@ export async function repondre(question: string, ds: Dataset, avecExemples: bool
         colonnes: resultat.colonnes,
         lignes: resultat.lignes.slice(0, 30),
         total_toutes_lignes_filtrees: resultat.total,
+        ...sommeDesLignes(resultat, exec.plan),
         groupes: resultat.nbGroupes,
         ...(resultat.lignes.length > 30 || resultat.nbGroupes > resultat.lignes.length ? { note: "résultat tronqué, seules les premières lignes sont montrées" } : {})
     };
@@ -152,7 +161,7 @@ export async function synthese(tours: Tour[], appel: Appel): Promise<Synthese> {
     const analyses = faites.map(t => ({
         question: t.question,
         calcul: decrirePlan(t.plan!),
-        resultat: { colonnes: t.resultat!.colonnes, lignes: t.resultat!.lignes.slice(0, 15), total: t.resultat!.total, groupes: t.resultat!.nbGroupes },
+        resultat: { colonnes: t.resultat!.colonnes, lignes: t.resultat!.lignes.slice(0, 15), total: t.resultat!.total, ...sommeDesLignes(t.resultat!, t.plan!), groupes: t.resultat!.nbGroupes },
         reponse: t.texte
     }));
     const hors = tours.filter(t => t.type === "impossible").map(t => ({ question: t.question, raison: t.texte }));
