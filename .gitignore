@@ -21,3 +21,8 @@ node_modules/
 # Système
 .DS_Store
 Thumbs.db
+
+# Vidéos de démo (trop lourdes pour GitHub)
+*.mp4
+*.mov
+*.webm
