@@ -4,7 +4,7 @@
 
 **Posez une question en français à votre rapport Power BI. Obtenez une réponse chiffrée, vérifiée, et le code DAX qui la prouve.**
 
-*L'IA ne voit jamais vos données. Elle ne peut pas inventer un chiffre.*
+*Power BI calcule, l'IA explique : chaque chiffre de la réponse est vérifié.*
 
 ![Power BI](https://img.shields.io/badge/Power%20BI-Custom%20Visual-F2C811?logo=powerbi&logoColor=black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.5-3178C6?logo=typescript&logoColor=white)

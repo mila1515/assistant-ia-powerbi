@@ -176,7 +176,7 @@ export class Visual implements IVisual {
         const vide = h("div", "ia-vide");
         if (!pret) {
             vide.appendChild(h("div", "ia-titre", "Glisse tes colonnes dans le visuel"));
-            vide.appendChild(h("p", "ia-texte", "Mets tes catégories, dates et identifiants dans « Colonnes », et tes montants ou quantités dans « Valeurs ». L'IA ne voit que les noms des colonnes, jamais les données."));
+            vide.appendChild(h("p", "ia-texte", "Mets tes catégories, dates et identifiants dans « Colonnes », et tes montants ou quantités dans « Valeurs ». L'IA reçoit la description des colonnes et les résultats agrégés, jamais le tableau des lignes : le calcul est fait ici."));
         } else if (!this.cle()) {
             vide.appendChild(h("div", "ia-titre", "Ajoute ta clé API"));
             vide.appendChild(h("p", "ia-texte", "Format du visuel > Assistant IA > Clé API. Colle une clé Gemini (gratuite sur aistudio.google.com) ou une clé OpenAI (sk-…)."));
